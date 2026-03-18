@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,7 +15,7 @@ def _make_config(**hm_kwargs) -> Config:
     return Config(
         repo=RepoConfig(owner="otisweygang", name="GitHub_Manager"),
         heatmap=HeatmapConfig(**hm_kwargs) if hm_kwargs else HeatmapConfig(),
-        claude=ClaudeConfig(enabled=False),  # use fallback templates in tests
+        claude=ClaudeConfig(enabled=False),
     )
 
 
@@ -35,11 +35,11 @@ def test_plan_disabled_returns_none():
 def test_plan_returns_commit_plan_when_no_prior_commits():
     cfg = _make_config()
     git = _make_git_ops()
-    with patch("bot.heatmap.llm.generate", return_value="bot: run history — 2026-03-18"):
-        result = heatmap.plan(cfg, git)
+    result = heatmap.plan(cfg, git)
     assert result is not None
     assert result.commit_type == "run_history"
     assert "Bot-Run-Id: 2026-03-18" in result.idempotency_marker
+    assert result.commit_message.startswith("bot: run history — 2026-03-18")
 
 
 def test_plan_skips_if_already_committed_today():
@@ -64,8 +64,7 @@ def test_plan_picks_next_commit_type_when_first_done():
     )
     cfg = _make_config(commit_types=["run_history", "extra_type"])
     git = _make_git_ops(commits=[prior_commit])
-    with patch("bot.heatmap.llm.generate", return_value="bot: extra type — 2026-03-18"):
-        result = heatmap.plan(cfg, git)
+    result = heatmap.plan(cfg, git)
     assert result is not None
     assert result.commit_type == "extra_type"
 
@@ -80,7 +79,6 @@ def test_idempotency_stops_scanning_at_yesterday():
     )
     cfg = _make_config(commit_types=["run_history"])
     git = _make_git_ops(commits=[old_commit])
-    with patch("bot.heatmap.llm.generate", return_value="bot: run history"):
-        result = heatmap.plan(cfg, git)
+    result = heatmap.plan(cfg, git)
     # scan stops at yesterday so today's marker in old commit should NOT block
     assert result is not None

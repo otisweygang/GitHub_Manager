@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-from . import llm
 from .config import Config
 from .git_ops import GitOps
 from .models import ChangeSet, CommitPlan, FileChange
@@ -42,19 +41,9 @@ def plan(config: Config, git_ops: GitOps, force: bool = False) -> CommitPlan | N
 
     idempotency_marker = f"Bot-Run-Id: {today}\nBot-Commit-Type: {commit_type}"
 
-    commit_message = llm.generate(
-        intent="Write a git commit message: one line, imperative mood, no period at end, under 72 characters",
-        context={
-            "commit_type": commit_type,
-            "date": str(today),
-            "files_changed": ", ".join(f.path for f in changeset.files),
-        },
-        fallback=fallback_message,
-        claude_config=config.claude,
-    )
-
-    # Append idempotency trailer (Claude output goes in subject; trailer in body)
-    full_message = f"{commit_message}\n\n{idempotency_marker}"
+    # Use the deterministic fallback template — commit messages must be consistent
+    # so idempotency scanning and history are predictable.
+    full_message = f"{fallback_message}\n\n{idempotency_marker}"
 
     return CommitPlan(
         changeset=changeset,
