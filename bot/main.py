@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import config as config_module
-from . import executor, health, heatmap, issues, logger
+from . import executor, health, heatmap, issues, logger, pulls, self_improve
 from .git_ops import GitOps
 from .github_client import GitHubClient
 from .models import RunState
@@ -75,8 +75,18 @@ def main() -> int:
             log.info("Planning: issues")
             issue_plans = issues.plan(findings, github_client, cfg)
 
-        if "pulls" in active_planners and cfg.pulls.enabled:
-            log.debug("pulls planner: not yet implemented (v1.1)")
+        si_findings = []
+        if "pulls" in active_planners and cfg.pulls.enabled and cfg.pulls.self_improve.enabled:
+            log.info("Planning: self-improve")
+            si_findings = self_improve.analyze(cfg, github_client, today)
+
+        si_pr_plans, si_issue_plans = [], []
+        if si_findings:
+            log.info("Planning: pulls")
+            si_pr_plans, si_issue_plans = pulls.plan(si_findings, github_client, cfg, today)
+
+        issue_plans = issue_plans + si_issue_plans
+        pr_plans = pr_plans + si_pr_plans
 
         # --------------------------------------------------------------
         # EXECUTE PHASE — all side effects, no decisions

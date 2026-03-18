@@ -35,6 +35,28 @@ issues:
 pulls:
   enabled: true
   auto_merge_safe: false
+  self_improve:
+    enabled: false          # set true to activate self-improvement
+    max_prs_per_day: 2
+    max_issues_per_day: 3
+    max_tokens: 8192
+    model: ""               # empty = inherit claude.model
+  scope:
+    readable_paths:
+      - "bot/*.py"
+      - "tests/*.py"
+      - "config.yaml"
+      - "docs/*.md"
+      - "README.md"
+      - "requirements.txt"
+    writable_paths:
+      - "bot/*.py"
+      - "config.yaml"
+      - "docs/*.md"
+      - "README.md"
+    always_review_paths:
+      - "tests/"
+      - ".github/"
 
 lock:
   timeout_minutes: 30

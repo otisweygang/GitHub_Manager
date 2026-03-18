@@ -65,9 +65,31 @@ class IssuesConfig:
 
 
 @dataclass
+class SelfImproveScope:
+    readable_paths: list[str] = field(default_factory=lambda: [
+        "bot/*.py", "tests/*.py", "config.yaml", "docs/*.md", "README.md", "requirements.txt"
+    ])
+    writable_paths: list[str] = field(default_factory=lambda: [
+        "bot/*.py", "config.yaml", "docs/*.md", "README.md"
+    ])
+    always_review_paths: list[str] = field(default_factory=lambda: ["tests/", ".github/"])
+
+
+@dataclass
+class SelfImproveConfig:
+    enabled: bool = False
+    max_prs_per_day: int = 2
+    max_issues_per_day: int = 3
+    max_tokens: int = 8192
+    model: str = ""  # empty = inherit claude.model
+
+
+@dataclass
 class PullsConfig:
     enabled: bool = True
     auto_merge_safe: bool = False
+    self_improve: SelfImproveConfig = field(default_factory=SelfImproveConfig)
+    scope: SelfImproveScope = field(default_factory=SelfImproveScope)
 
 
 @dataclass
@@ -173,9 +195,27 @@ def load(path: str | Path = "config.yaml") -> Config:
     )
 
     pulls_raw = raw.get("pulls", {})
+    si_raw = pulls_raw.get("self_improve", {})
+    scope_raw = pulls_raw.get("scope", {})
     pulls = PullsConfig(
         enabled=pulls_raw.get("enabled", True),
         auto_merge_safe=pulls_raw.get("auto_merge_safe", False),
+        self_improve=SelfImproveConfig(
+            enabled=si_raw.get("enabled", False),
+            max_prs_per_day=si_raw.get("max_prs_per_day", 2),
+            max_issues_per_day=si_raw.get("max_issues_per_day", 3),
+            max_tokens=si_raw.get("max_tokens", 8192),
+            model=si_raw.get("model", ""),
+        ),
+        scope=SelfImproveScope(
+            readable_paths=scope_raw.get("readable_paths", [
+                "bot/*.py", "tests/*.py", "config.yaml", "docs/*.md", "README.md", "requirements.txt"
+            ]),
+            writable_paths=scope_raw.get("writable_paths", [
+                "bot/*.py", "config.yaml", "docs/*.md", "README.md"
+            ]),
+            always_review_paths=scope_raw.get("always_review_paths", ["tests/", ".github/"]),
+        ),
     )
 
     lock_raw = raw.get("lock", {})

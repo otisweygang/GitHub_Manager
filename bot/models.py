@@ -46,6 +46,17 @@ class PRPlan:
 
 
 @dataclass
+class ImprovementFinding:
+    category: str                          # "bug" | "improvement" | "docs" | "missing_feature"
+    title: str                             # short title (max 80 chars)
+    body: str                              # detailed markdown description
+    action: Literal["pr", "issue"]         # "pr" = fix ready, "issue" = needs discussion
+    file_changes: list[FileChange]         # non-empty only when action=="pr"
+    fingerprint: str                       # sha1[:10] of "category:title"
+    risk: Literal["SAFE", "NEEDS_REVIEW"]  # NEEDS_REVIEW if path in always_review_paths
+
+
+@dataclass
 class RunState:
     date: str
     dry_run: bool
