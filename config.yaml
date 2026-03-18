@@ -51,12 +51,6 @@ claude:
     no_preamble: true     # no "Sure!" / "Here's..." openers
     concise: true         # short sentences, no padding
     tone: "professional"  # professional | casual
-  max_tokens: 256
-  style:
-    tone: "professional"        # professional | casual
-    no_emojis: true
-    no_preamble: true           # no "Sure!" / "Here's..." opener
-    concise: true               # short sentences, no filler
 
 dry_run:
   default: false

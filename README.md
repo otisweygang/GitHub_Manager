@@ -23,6 +23,9 @@ python -m bot.main --only=heatmap
 
 # Skip Claude (template fallbacks)
 python -m bot.main --no-claude --dry-run
+
+# Force rerun even if already committed today
+python -m bot.main --force
 ```
 
 ## Configuration
