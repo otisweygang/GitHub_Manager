@@ -21,6 +21,9 @@ on:
         options: ['false', 'true']
         default: 'false'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   run-bot:
     runs-on: ubuntu-latest
