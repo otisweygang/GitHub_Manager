@@ -77,12 +77,17 @@ class GitOps:
         log.info("Committed %s", sha[:8])
         return sha
 
-    def pull_rebase(self, remote: str = "origin", branch: str = "main") -> None:
-        self._run("pull", "--rebase", remote, branch)
-
     def push(self, remote: str = "origin", branch: str = "main") -> None:
+        result = self._run("push", remote, branch, check=False)
+        if result.returncode == 0:
+            log.info("Pushed to %s/%s", remote, branch)
+            return
+        # Push rejected — remote has new commits. Fetch, rebase, retry once.
+        log.warning("Push rejected, rebasing and retrying")
+        self._run("fetch", remote)
+        self._run("rebase", f"{remote}/{branch}")
         self._run("push", remote, branch)
-        log.info("Pushed to %s/%s", remote, branch)
+        log.info("Pushed to %s/%s after rebase", remote, branch)
 
     def checkout_new_branch(self, branch: str) -> None:
         self._run("checkout", "-b", branch)
