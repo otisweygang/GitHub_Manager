@@ -134,7 +134,8 @@ def _call_claude(prompt: str, config: "Config") -> str:
 
     try:
         client = llm_module._get_client()
-        message = client.messages.create(
+        text = ""
+        with client.messages.stream(
             model=model,
             max_tokens=si_cfg.max_tokens,
             temperature=config.claude.temperature,
@@ -143,8 +144,10 @@ def _call_claude(prompt: str, config: "Config") -> str:
                 "Output only valid JSON. No explanation, no markdown fences."
             ),
             messages=[{"role": "user", "content": prompt}],
-        )
-        return message.content[0].text.strip()
+        ) as stream:
+            for chunk in stream.text_stream:
+                text += chunk
+        return text.strip()
     except Exception as exc:
         log.warning("Self-improve Claude call failed: %s", exc)
         return ""
