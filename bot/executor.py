@@ -38,6 +38,7 @@ def apply_commit(
             return
 
         git_ops.commit(plan.commit_message)
+        git_ops.pull_rebase()
         git_ops.push()
 
         for fc in plan.changeset.files:

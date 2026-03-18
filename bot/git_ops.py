@@ -77,6 +77,9 @@ class GitOps:
         log.info("Committed %s", sha[:8])
         return sha
 
+    def pull_rebase(self, remote: str = "origin", branch: str = "main") -> None:
+        self._run("pull", "--rebase", remote, branch)
+
     def push(self, remote: str = "origin", branch: str = "main") -> None:
         self._run("push", remote, branch)
         log.info("Pushed to %s/%s", remote, branch)
