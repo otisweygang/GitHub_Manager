@@ -36,10 +36,10 @@ pulls:
   enabled: true
   auto_merge_safe: false
   self_improve:
-    enabled: true          # set true to activate self-improvement
+    enabled: true           # set true to activate self-improvement
     max_prs_per_day: 2
     max_issues_per_day: 3
-    max_tokens: 8192
+    max_tokens: 32000
     model: ""               # empty = inherit claude.model
   scope:
     readable_paths:

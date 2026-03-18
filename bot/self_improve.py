@@ -104,8 +104,9 @@ You are a self-improvement agent for an autonomous GitHub bot. Analyze the codeb
 
 Rules:
 - Output ONLY a valid JSON array. No explanation, no markdown fences, no prose.
-- For action "pr": file_changes must contain the COMPLETE new file content (not a diff).
-- For action "issue": file_changes must be an empty array [].
+- For action "pr": include COMPLETE new file content. Only use "pr" for small, targeted fixes (< 100 lines changed). The file_changes array must be non-empty.
+- For action "issue": use for larger improvements, architectural changes, or anything requiring discussion. Set file_changes to [].
+- When in doubt between "pr" and "issue", prefer "issue" to keep output size manageable.
 - Only propose changes to files matching these patterns: {writable}
 - Do not raise findings for things already tracked in the open issues listed above.
 - Maximum {max_findings} total findings. Be conservative — only raise findings you are confident about.
