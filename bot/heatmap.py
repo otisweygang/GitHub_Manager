@@ -87,7 +87,9 @@ def _pick_commit_type(config: Config, git_ops: GitOps, today: date) -> str | Non
 def _build_changeset(commit_type: str, today: date) -> tuple[ChangeSet, str]:
     """Build the ChangeSet and fallback commit message for a given commit_type."""
     if commit_type == "changelog_entry":
-        entry = f"\n## [{today}]\n- Bot maintenance run: daily health check and heatmap commit\n"
+        from datetime import datetime, timezone
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        entry = f"\n## [{today}] {timestamp}\n- Bot maintenance run: daily health check and heatmap commit\n"
         return (
             ChangeSet(
                 files=[FileChange(path="CHANGELOG.md", content=_append_changelog(entry))],
