@@ -1,0 +1,61 @@
+name: GitHub Manager Bot
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # daily at 08:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no writes)'
+        type: choice
+        options: ['false', 'true']
+        default: 'false'
+      only:
+        description: 'Run only one subsystem'
+        type: choice
+        options: ['', 'heatmap', 'health', 'issues', 'pulls']
+        default: ''
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # required for commit message idempotency scanning
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Configure git identity
+        run: |
+          git config user.name "GitHub Manager Bot"
+          git config user.email "bot@github-manager.local"
+
+      - name: Run bot
+        run: |
+          python -m bot.main \
+            ${{ inputs.dry_run == 'true' && '--dry-run' || '' }} \
+            ${{ inputs.only != '' && format('--only={0}', inputs.only) || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LOG_FORMAT: json
+
+      - name: Upload run logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run-log-${{ github.run_id }}
+          path: logs/
+          retention-days: 30

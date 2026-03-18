@@ -1,0 +1,66 @@
+repo:
+  owner: "otisweygang"
+  name: "GitHub_Manager"
+  default_branch: "main"
+
+heatmap:
+  enabled: true
+  commit_types:
+    - changelog_entry     # writes to CHANGELOG.md
+    - run_log             # writes to logs/YYYY-MM-DD.md
+  commits_per_day: 1
+  idempotency_scan_depth: 50
+
+health:
+  enabled: true
+  checks:
+    missing_files:
+      enabled: true
+      required_files:
+        - README.md
+        - CHANGELOG.md
+        - config.yaml
+        - requirements.txt
+        - .github/workflows/bot.yml
+    stale_issues:
+      enabled: true
+      stale_after_days: 14
+    workflow_failures:
+      enabled: true
+      check_last_n_runs: 5
+
+issues:
+  enabled: true
+  bot_label: "bot-managed"
+  auto_close_resolved: true
+
+pulls:
+  enabled: true
+  auto_merge_safe: false
+
+lock:
+  timeout_minutes: 30
+
+claude:
+  enabled: true
+  model: "claude-opus-4-6"
+  max_tokens: 256
+  temperature: 0.2        # low = consistent, deterministic output
+  style:
+    no_emojis: true
+    no_preamble: true     # no "Sure!" / "Here's..." openers
+    concise: true         # short sentences, no padding
+    tone: "professional"  # professional | casual
+  max_tokens: 256
+  style:
+    tone: "professional"        # professional | casual
+    no_emojis: true
+    no_preamble: true           # no "Sure!" / "Here's..." opener
+    concise: true               # short sentences, no filler
+
+dry_run:
+  default: false
+
+logging:
+  level: "INFO"
+  run_log_dir: "logs"
