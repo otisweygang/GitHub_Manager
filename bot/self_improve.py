@@ -114,7 +114,7 @@ Rules:
 - For action "issue": use for anything requiring judgement, discussion, or touching multiple files. Set file_changes to [].
 - Only propose changes to files matching these patterns: {writable}
 - Do not raise findings for things already tracked in the open issues listed above.
-- Maximum {max_findings} total findings. Raise at most 1 PR and 1 issue — pick only the single highest-confidence finding per type.
+- Maximum {max_findings} total findings. Raise issues only — do not propose PRs. Pick only the highest-confidence findings.
 - If you find nothing worth flagging, return [].
 
 Each finding must match this schema:
