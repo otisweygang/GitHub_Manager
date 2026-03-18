@@ -100,23 +100,28 @@ def _build_prompt(
 </open_issues>
 
 <task>
-You are a self-improvement agent for an autonomous GitHub bot. Analyze the codebase above and identify bugs, improvements, documentation gaps, or missing features.
+You are a self-improvement agent for an autonomous GitHub bot. Your job is NOT to generate new ideas — it is to verify that the codebase matches its own documentation and standards.
+
+Focus exclusively on:
+1. Code that contradicts or is missing from docs/architecture.md (e.g. a module described as "not yet implemented" that now exists, or a data flow that differs from the diagram)
+2. Python style violations: missing type annotations on public functions, inconsistent naming (snake_case for functions/vars, PascalCase for classes), unused imports
+3. Config keys present in config.yaml but not documented in docs/architecture.md, or vice versa
+4. Logging style inconsistency (all log calls should use %s-style formatting, not f-strings)
 
 Rules:
 - Output ONLY a valid JSON array. No explanation, no markdown fences, no prose.
-- For action "pr": include COMPLETE new file content. Only use "pr" for small, targeted fixes (< 100 lines changed). The file_changes array must be non-empty.
-- For action "issue": use for larger improvements, architectural changes, or anything requiring discussion. Set file_changes to [].
-- When in doubt between "pr" and "issue", prefer "issue" to keep output size manageable.
+- For action "pr": include COMPLETE new file content. Only use "pr" for small, targeted fixes that are purely mechanical (e.g. fixing a log f-string, adding a missing type annotation). The file_changes array must be non-empty.
+- For action "issue": use for anything requiring judgement, discussion, or touching multiple files. Set file_changes to [].
 - Only propose changes to files matching these patterns: {writable}
 - Do not raise findings for things already tracked in the open issues listed above.
-- Maximum {max_findings} total findings. Be conservative — only raise findings you are confident about.
+- Maximum {max_findings} total findings. Raise at most 1 PR and 1 issue — pick only the single highest-confidence finding per type.
 - If you find nothing worth flagging, return [].
 
 Each finding must match this schema:
 {{
   "category": "bug" | "improvement" | "docs" | "missing_feature",
   "title": "Short title, max 80 characters",
-  "body": "Detailed markdown description with context and rationale",
+  "body": "Detailed markdown description with context and rationale. For docs mismatches, quote the relevant doc text and the actual code.",
   "action": "pr" | "issue",
   "file_changes": [{{"path": "relative/path.py", "content": "FULL new file content"}}]
 }}
