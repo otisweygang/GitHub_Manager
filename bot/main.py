@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import config as config_module
-from . import executor, heatmap, logger
+from . import executor, health, heatmap, issues, logger
 from .git_ops import GitOps
 from .github_client import GitHubClient
 from .models import RunState
@@ -66,12 +66,14 @@ def main() -> int:
             log.info("Planning: heatmap%s", " [force]" if force else "")
             commit_plan = heatmap.plan(cfg, git_ops, force=force)
 
-        # health / issues / pulls — stubs for v1.1
+        findings = []
         if "health" in active_planners and cfg.health.enabled:
-            log.debug("health planner: not yet implemented (v1.1)")
+            log.info("Planning: health")
+            findings = health.check(cfg, github_client)
 
         if "issues" in active_planners and cfg.issues.enabled:
-            log.debug("issues planner: not yet implemented (v1.1)")
+            log.info("Planning: issues")
+            issue_plans = issues.plan(findings, github_client, cfg)
 
         if "pulls" in active_planners and cfg.pulls.enabled:
             log.debug("pulls planner: not yet implemented (v1.1)")

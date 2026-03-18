@@ -27,7 +27,7 @@ health:
       stale_after_days: 14
     workflow_failures:
       enabled: true
-      check_last_n_runs: 5
+      check_last_n_runs: 3
 
 issues:
   enabled: true
