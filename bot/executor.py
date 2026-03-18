@@ -28,6 +28,8 @@ def apply_commit(
         return
 
     try:
+        git_ops.pull_rebase()
+
         for fc in plan.changeset.files:
             git_ops.write_file(fc.path, fc.content)
             git_ops.stage(fc.path)
@@ -38,7 +40,6 @@ def apply_commit(
             return
 
         git_ops.commit(plan.commit_message)
-        git_ops.pull_rebase()
         git_ops.push()
 
         for fc in plan.changeset.files:
