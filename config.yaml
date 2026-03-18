@@ -18,6 +18,7 @@ health:
       required_files:
         - README.md
         - config.yaml
+        - DOES_NOT_EXIST.md
         - requirements.txt
         - .github/workflows/bot.yml
     stale_issues:
