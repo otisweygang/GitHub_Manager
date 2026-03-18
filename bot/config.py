@@ -21,7 +21,7 @@ class RepoConfig:
 @dataclass
 class HeatmapConfig:
     enabled: bool = True
-    commit_types: list[str] = field(default_factory=lambda: ["changelog_entry", "run_log"])
+    commit_types: list[str] = field(default_factory=lambda: ["run_history"])
     commits_per_day: int = 1
     idempotency_scan_depth: int = 50
 
@@ -137,7 +137,7 @@ def load(path: str | Path = "config.yaml") -> Config:
     hm_raw = raw.get("heatmap", {})
     heatmap = HeatmapConfig(
         enabled=hm_raw.get("enabled", True),
-        commit_types=hm_raw.get("commit_types", ["changelog_entry", "run_log"]),
+        commit_types=hm_raw.get("commit_types", ["run_history"]),
         commits_per_day=hm_raw.get("commits_per_day", 1),
         idempotency_scan_depth=hm_raw.get("idempotency_scan_depth", 50),
     )

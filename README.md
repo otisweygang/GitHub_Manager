@@ -1,40 +1,54 @@
 # GitHub Manager Bot
 
-An autonomous bot that maintains this repository — daily commits, health checks, and a self-improvement loop.
+An autonomous bot that maintains this repository — daily commits, health checks, and automated issue reporting.
 
-## How it works
+## What it does
 
-- Runs daily via GitHub Actions (08:00 UTC)
-- All behaviour configured in [`config.yaml`](config.yaml)
-- Reports findings as GitHub Issues
-- Opens PRs for safe auto-fixable changes
-- Uses Claude API for intelligent commit messages and issue descriptions
+- Runs daily at 08:00 UTC via GitHub Actions
+- Appends a row to [`docs/run_history.md`](docs/run_history.md) on every run
+- Appends an entry to [`logs/YYYY-MM-DD.md`](logs/) for every run (including force reruns)
+- Checks repo health: missing files, stale issues, workflow failures
+- Opens GitHub Issues for any findings (deduplicated — never double-posts)
+- Uses Claude API for commit messages and issue bodies, falls back to templates if unavailable
 
 ## Running locally
 
 ```bash
 pip install -r requirements.txt
 
-# Dry run — no writes, full output
+# Dry run — no writes, no pushes, full output
 python -m bot.main --dry-run --verbose
 
-# Run only heatmap subsystem
+# Run only one subsystem
 python -m bot.main --only=heatmap
+python -m bot.main --only=health
 
-# Skip Claude (template fallbacks)
+# Skip Claude (use template fallbacks)
 python -m bot.main --no-claude --dry-run
 
 # Force rerun even if already committed today
 python -m bot.main --force
+
+# Run tests
+pytest tests/ -v
 ```
 
 ## Configuration
 
-Edit [`config.yaml`](config.yaml) to control:
-- Which checks run
-- Heatmap commit types and frequency
-- Auto-merge behaviour for PRs
-- Claude model selection
+All behaviour is driven by [`config.yaml`](config.yaml):
+
+- `heatmap` — commit types and idempotency settings
+- `health.checks` — which checks run and their thresholds
+- `issues` — labels and auto-close behaviour
+- `claude` — model, style, and fallback settings
+- `lock` — concurrent-run timeout
+
+## GitHub Actions workflows
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `bot.yml` | Daily 08:00 UTC + manual dispatch | Production run — commits, health checks, issues |
+| `pr_check.yml` | Every PR to main | Gate — runs pytest + dry-run before merge |
 
 ## Secrets required
 
