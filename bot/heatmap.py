@@ -11,7 +11,7 @@ from .models import ChangeSet, CommitPlan, FileChange
 log = logging.getLogger("bot.heatmap")
 
 # Files this module is allowed to touch — SAFE by definition
-_SAFE_PATHS = {"CHANGELOG.md", "logs"}
+_SAFE_PATHS = {"docs/run_history.md"}
 
 
 def plan(config: Config, git_ops: GitOps, force: bool = False) -> CommitPlan | None:
@@ -86,60 +86,41 @@ def _pick_commit_type(config: Config, git_ops: GitOps, today: date) -> str | Non
 
 def _build_changeset(commit_type: str, today: date) -> tuple[ChangeSet, str]:
     """Build the ChangeSet and fallback commit message for a given commit_type."""
-    if commit_type == "changelog_entry":
-        from datetime import datetime, timezone
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        entry = f"\n## [{today}] {timestamp}\n- Bot maintenance run: daily health check and heatmap commit\n"
+    if commit_type == "run_history":
         return (
             ChangeSet(
-                files=[FileChange(path="CHANGELOG.md", content=_append_changelog(entry))],
-                reason=f"Daily changelog entry for {today}",
+                files=[FileChange(path="docs/run_history.md", content=_append_run_history(today))],
+                reason=f"Daily run history entry for {today}",
                 risk="SAFE",
                 source="heatmap",
             ),
-            f"bot: changelog entry — {today}",
-        )
-
-    if commit_type == "run_log":
-        log_path = f"logs/{today}.md"
-        content = f"# Run log — {today}\n\nBot maintenance run completed.\n"
-        return (
-            ChangeSet(
-                files=[FileChange(path=log_path, content=content)],
-                reason=f"Daily run log for {today}",
-                risk="SAFE",
-                source="heatmap",
-            ),
-            f"bot: run log — {today}",
+            f"bot: run history — {today}",
         )
 
     # Unknown commit_type — generic fallback
-    log.warning("Unknown commit_type %r — using generic log entry", commit_type)
-    log_path = f"logs/{today}-{commit_type}.md"
-    content = f"# {commit_type} — {today}\n\nBot automated entry.\n"
+    log.warning("Unknown commit_type %r — skipping", commit_type)
     return (
         ChangeSet(
-            files=[FileChange(path=log_path, content=content)],
-            reason=f"Heatmap commit ({commit_type}) for {today}",
+            files=[],
+            reason=f"Unknown commit type: {commit_type}",
             risk="SAFE",
             source="heatmap",
         ),
-        f"bot: {commit_type} — {today}",
+        f"bot: unknown commit type {commit_type}",
     )
 
 
-def _append_changelog(entry: str) -> str:
-    """Read existing CHANGELOG.md and prepend the new entry after the header."""
+def _append_run_history(today: date) -> str:
+    """Append a row to docs/run_history.md and return full file content."""
+    from datetime import datetime, timezone
     from pathlib import Path
 
-    path = Path("CHANGELOG.md")
-    if path.exists():
-        existing = path.read_text()
-    else:
-        existing = "# Changelog\n"
+    path = Path("docs/run_history.md")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    row = f"| {today} | {timestamp} |\n"
 
-    # Insert after first line (the # Changelog header)
-    lines = existing.splitlines(keepends=True)
-    if lines:
-        return lines[0] + entry + "".join(lines[1:])
-    return entry
+    if path.exists():
+        return path.read_text() + row
+    else:
+        header = "# Run History\n\nAutomatically updated by the bot on each daily run.\n\n| Date | Timestamp |\n|---|---|\n"
+        return header + row

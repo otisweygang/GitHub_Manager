@@ -59,7 +59,14 @@ def write_run_log(state_dict: dict, run_log_dir: str = "logs") -> Path:
         + _items("errors", "- {}")
     )
 
-    log_path.write_text("\n".join(lines) + "\n")
+    from datetime import datetime, timezone
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    entry = f"\n---\n*Run at {timestamp}*\n\n" + "\n".join(lines) + "\n"
+
+    if log_path.exists():
+        log_path.write_text(log_path.read_text() + entry)
+    else:
+        log_path.write_text(entry.lstrip("\n"))
     return log_path
 
 

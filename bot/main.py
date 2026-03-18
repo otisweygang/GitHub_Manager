@@ -98,6 +98,17 @@ def main() -> int:
     log_path = logger.write_run_log(state.to_dict(), run_log_dir=cfg.logging.run_log_dir)
     log.info("Run log written to %s", log_path)
 
+    if not dry_run:
+        try:
+            git_ops.stage(str(log_path))
+            if git_ops.has_staged_changes():
+                git_ops.commit(f"bot: run log — {today}")
+                git_ops.push()
+                log.info("Run log committed and pushed")
+        except Exception as exc:
+            log.error("Failed to commit run log: %s", exc)
+            state.errors.append(f"run log commit error: {exc}")
+
     _release_lock(state, today, dry_run)
 
     if args.verbose or dry_run:
