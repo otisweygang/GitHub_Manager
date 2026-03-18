@@ -14,17 +14,23 @@ log = logging.getLogger("bot.heatmap")
 _SAFE_PATHS = {"CHANGELOG.md", "logs"}
 
 
-def plan(config: Config, git_ops: GitOps) -> CommitPlan | None:
+def plan(config: Config, git_ops: GitOps, force: bool = False) -> CommitPlan | None:
     """Pure planning function — no side effects.
 
     Returns a CommitPlan for today's heatmap commit, or None if already done.
+    Pass force=True to bypass idempotency and rerun regardless.
     """
     if not config.heatmap.enabled:
         log.info("Heatmap disabled in config, skipping")
         return None
 
     today = git_ops.today_utc()
-    commit_type = _pick_commit_type(config, git_ops, today)
+
+    if force:
+        log.info("Heatmap: force flag set — bypassing idempotency check")
+        commit_type = config.heatmap.commit_types[0] if config.heatmap.commit_types else None
+    else:
+        commit_type = _pick_commit_type(config, git_ops, today)
 
     if commit_type is None:
         log.info("Heatmap: already committed today (%s), skipping", today)

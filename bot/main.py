@@ -1,7 +1,7 @@
 """GitHub Manager Bot — entry point.
 
 Usage:
-    python -m bot.main [--dry-run] [--only=SUBSYSTEM] [--config=PATH] [--verbose] [--no-claude]
+    python -m bot.main [--dry-run] [--force] [--only=SUBSYSTEM] [--config=PATH] [--verbose] [--no-claude]
 
 Subsystems: heatmap, health, issues, pulls
 """
@@ -36,6 +36,7 @@ def main() -> int:
         cfg.claude.enabled = False
 
     dry_run: bool = args.dry_run if args.dry_run is not None else cfg.dry_run.default
+    force: bool = args.force
     active_planners = {args.only} if args.only else ALL_PLANNERS
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -62,8 +63,8 @@ def main() -> int:
         pr_plans = []
 
         if "heatmap" in active_planners:
-            log.info("Planning: heatmap")
-            commit_plan = heatmap.plan(cfg, git_ops)
+            log.info("Planning: heatmap%s", " [force]" if force else "")
+            commit_plan = heatmap.plan(cfg, git_ops, force=force)
 
         # health / issues / pulls — stubs for v1.1
         if "health" in active_planners and cfg.health.enabled:
@@ -164,6 +165,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default="config.yaml", help="Path to config.yaml")
     parser.add_argument("--verbose", action="store_true", help="Force DEBUG logging")
     parser.add_argument("--no-claude", action="store_true", help="Use template fallbacks only")
+    parser.add_argument("--force", action="store_true", help="Bypass idempotency check and rerun regardless")
     return parser.parse_args()
 
 

@@ -15,6 +15,11 @@ on:
         type: choice
         options: ['', 'heatmap', 'health', 'issues', 'pulls']
         default: ''
+      force:
+        description: 'Bypass idempotency — rerun even if already committed today'
+        type: choice
+        options: ['false', 'true']
+        default: 'false'
 
 jobs:
   run-bot:
@@ -46,6 +51,7 @@ jobs:
         run: |
           python -m bot.main \
             ${{ inputs.dry_run == 'true' && '--dry-run' || '' }} \
+            ${{ inputs.force == 'true' && '--force' || '' }} \
             ${{ inputs.only != '' && format('--only={0}', inputs.only) || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
